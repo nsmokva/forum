@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar app color="primary" dark prominent>
-      <v-toolbar-title>Forum.hr</v-toolbar-title>
+      <v-toolbar-title><router-link :to="{ name: 'home'}"><span class="white--text">Forum.hr</span></router-link><span v-if="isTopicPage()">/{{topic}}</span></v-toolbar-title>
         <v-spacer></v-spacer>
         <template v-if="loggedInUser.id ===''">
           <div class="pt-1">
@@ -23,7 +23,7 @@
     </v-app-bar>
     
     <v-main>
-      <router-view :loggedInUser="loggedInUser"></router-view>
+      <router-view :loggedInUser="loggedInUser" @topicChanged="onTopicChanged"></router-view>
     </v-main> 
   </v-app>
 </template>
@@ -40,7 +40,8 @@ export default {
       loggedInUser: {
         id: '',
         nickName: ''
-      }
+      },
+      topic: ''
     }
   },
   methods:{
@@ -78,6 +79,17 @@ export default {
       .catch(error => {
         console.log(error)
       })
+    },
+    onTopicChanged(value){
+      console.log('topis in app is: ', value)
+      this.topic = value
+    },
+    isTopicPage(){
+      if(this.$route.name == 'topic'){
+        return true
+      }else{
+        return false
+      }
     }
   },
   created () {

@@ -1,4 +1,4 @@
-# twitter
+# forum app
 
 ## Project setup
 ```

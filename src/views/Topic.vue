@@ -1,32 +1,20 @@
 <template>
   <v-container class="mt-12">    
-    <v-btn class="mb-4 primary" x-large @click="post">New Post</v-btn>
-    <v-dialog v-model="showDialogLogIn" max-width="800">
+    <v-btn class="mb-4 primary" x-large @click="addPost()">New Post</v-btn>
+    <v-dialog :value="showDialogLogIn" @click:outside="closeLogInDialog()" max-width="800">
       <v-card>
         log in to post
       </v-card>
     </v-dialog>
-    <v-dialog v-model="showDialogPost" max-width="800">
-      <v-card>
-        <v-card v-if="this.quotedPost" width="95%" color="secondary" class="mx-auto">
-          <div>
-            <span class="font-weight-bold">{{quotedPost.ownerNickName}}</span>
-            <span> says:</span>
-          </div>
-          <p>{{quotedPost.post}}</p>
-        </v-card>
-        <v-textarea v-model="newPost"></v-textarea>
-        <v-btn @click="publish">Publish</v-btn>
-      </v-card>
-    </v-dialog>
+    <AddPost :loggedInUser="loggedInUser" :showDialogPost="showDialogPost" :quotedPost="quotedPost" @closeDialog="onCloseDialog"></AddPost>
     <v-row v-for="post in posts" :key="post._id" class="n-border-row mb-4 mt-0 mx-0">
       <v-col class="pa-0">
         <div class="n-color white--text text-h6 pl-3">{{formatDate(post.date)}}</div>
         <v-row class="ma-0">
           <v-col cols="3" class="n-border-right text-h6 pb-16">{{post.ownerNickName}}</v-col>
-          <v-col cols="9" class="text-h6 font-weight-light">       
+          <v-col cols="9" class="text-h6 font-weight-light d-flex flex-wrap">       
             <template v-if="post.quotedPost">
-              <v-card color="secondary" class="mx-auto">
+              <v-card color="secondary" class="mx-auto n-fullRow">
                 <div>
                   <span class="font-weight-bold">{{post.quotedPost.ownerNickName}}</span>
                   <span> says:</span>
@@ -34,8 +22,11 @@
                 <p>{{post.quotedPost.post}}</p>
               </v-card>
             </template>  
-            <div>{{post.post}}</div>
-            <div class="d-flex justify-end"><v-btn class="primary" @click='quote(post)'>Quote</v-btn></div>
+            <div class="n-fullRow">{{post.post}}</div>
+            <div class="d-flex justify-end align-self-end n-fullRow">
+              <v-btn class="primary mr-1" @click='addPost(post)'>Quote</v-btn>
+              <v-btn v-if="showEdit(post)" class="primary ml-1">Edit</v-btn>
+            </div>
           </v-col>
         </v-row>
       </v-col>
@@ -44,69 +35,37 @@
 </template>
 
 <script>
-//import AddPost from '../components/AddPost.vue'
+import AddPost from '../components/AddPost.vue'
 import axios from 'axios'
 import moment from 'moment';
 export default {
   components: {
-    
+    AddPost
   },
-  props:['loggedInUser'],
+  props:['loggedInUser', 'topic'],
   data: () => {
     return {
-      posts: [], 
-    showDialogPost: false,
+      posts: [],
+      showDialogPost: false,
       showDialogLogIn: false,
-      newPost: '',
       quotedPost: ''
     }
   },
   methods: {
-    post (){
-      if(this.loggedInUser.id == ''){
-        this.showDialogLogIn = true
-      }else{
-        this.showDialogPost = true
-      }
-    },
-    publish(){
-      var now = moment ();
-      axios.post('/backend/posts', {
-        post: this.newPost,
-        date: now,
-        _id: this.loggedInUser.id,
-        ownerNickName: this.loggedInUser.nickName,
-        quotedPost: this.quotedPost
-      })
-      .then(response => {
-        console.log('post publisked:', response);
-        this.showDialogPost = false
-        this.posts.push({
-          ownerNickName: this.loggedInUser.nickName,
-          date: moment(),
-          post: this.newPost,
-          quotedPost: this.quotedPost
-        })
-        this.newPost = ''
-        this.quotedPost = ''
-      })
-      .catch( error => {
-        console.log(error);
-      });
-    },
-    quote(post){
+    addPost(post){
        if(this.loggedInUser.id == ''){
         this.showDialogLogIn = true
       }else{
         this.showDialogPost = true
-        this.quotedPost = post
-      console.log('quotedPost is: ', this.quotedPost)
+        if(post != undefined){
+          this.quotedPost = post
+        }
       }    
     },
     getAllPosts(){
       axios.get('/backend/posts')
       .then(response => {
-        console.log('get all posts response: ', response)
+        console.log('all posts are: ', response)
         this.posts = response.data
       })
       .catch(error => {
@@ -120,6 +79,32 @@ export default {
         lastWeek: 'MMMM Do YYYY[, ]H[:]m',
         sameElse: 'MMMM Do YYYY[, ]H[:]m'
       });
+    },
+    onCloseDialog(value){
+      this.showDialogPost = false
+      if(value != undefined){
+        this.posts.push(value.post)
+      }
+      this.quotedPost = ''
+    },
+    closeLogInDialog(){
+      this.showDialogLogIn = false
+    },
+    showEdit(post){
+      if(post.ownerId == this.loggedInUser.id){
+        return true
+      }else{
+        return false
+      }
+    },
+  },
+  watch: {
+    topic: { 
+      immediate: true,
+      handler (newTopic) {
+      console.log('neswtopic is:', newTopic)
+      this.$emit('topicChanged', newTopic)
+      }
     }
   },
   created(){
@@ -142,5 +127,8 @@ export default {
   }
   .n-font-size {
     font-size: 1.25rem;
+  }
+  .n-fullRow{
+    flex-basis: 100%;
   }
 </style>
