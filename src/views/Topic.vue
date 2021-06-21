@@ -3,10 +3,10 @@
     <v-btn class="mb-4 primary" x-large @click="addPost()">New Post</v-btn>
     <v-dialog :value="showDialogLogIn" @click:outside="closeLogInDialog()" max-width="800">
       <v-card>
-        log in to post
+        <Login @loggingIn="onLoggingIn" :showDialogLogIn="showDialogLogIn"></Login>
       </v-card>
     </v-dialog>
-    <AddPost :loggedInUser="loggedInUser" :showDialogPost="showDialogPost" :quotedPost="quotedPost" @closeDialog="onCloseDialog"></AddPost>
+    <AddPost :loggedInUser="loggedInUser" :showDialogPost="showDialogPost" :quotedPost="quotedPost" :topicId="topicId" @closeDialog="onCloseDialog"></AddPost>
     <v-row v-for="post in posts" :key="post._id" class="n-border-row mb-4 mt-0 mx-0">
       <v-col class="pa-0">
         <div class="n-color white--text text-h6 pl-3">{{formatDate(post.date)}}</div>
@@ -36,13 +36,15 @@
 
 <script>
 import AddPost from '../components/AddPost.vue'
+import Login from '../components/Login.vue'
 import axios from 'axios'
 import moment from 'moment';
 export default {
   components: {
-    AddPost
+    AddPost,
+    Login
   },
-  props:['loggedInUser', 'topic'],
+  props:['loggedInUser', 'topicId'],
   data: () => {
     return {
       posts: [],
@@ -62,10 +64,15 @@ export default {
         }
       }    
     },
-    getAllPosts(){
-      axios.get('/backend/posts')
+    getAllPostsinTopic(){
+      console.log('topicId ', this.topicId)
+      axios.get('/backend/topic', {
+        params:{
+          id: this.topicId
+        }
+      })
       .then(response => {
-        console.log('all posts are: ', response)
+        console.log('all posts in getAllPosts: ', response)
         this.posts = response.data
       })
       .catch(error => {
@@ -97,18 +104,29 @@ export default {
         return false
       }
     },
+    onLoggingIn(value){
+      this.$emit('loggingIn', value)
+    }
   },
   watch: {
-    topic: { 
+    topicId: { 
       immediate: true,
       handler (newTopic) {
-      console.log('neswtopic is:', newTopic)
       this.$emit('topicChanged', newTopic)
+      },
+    },
+    loggedInUser:{
+      immediate: true, 
+      deep: true,
+      handler(newValue){
+        if(newValue.id != ''){
+          this.closeLogInDialog()
+        }
       }
     }
   },
   created(){
-    this.getAllPosts()
+    this.getAllPostsinTopic()
     this.quotedPost = ''
   }
 }

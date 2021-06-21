@@ -20,7 +20,7 @@
 import axios from 'axios'
 import moment from 'moment';
 export default {
-  props:['loggedInUser', 'showDialogPost', 'quotedPost'],
+  props:['loggedInUser', 'showDialogPost', 'quotedPost', 'topicId'],
   data (){
     return{
       newPost: '',
@@ -34,6 +34,7 @@ export default {
         date: now,
         ownerId: this.loggedInUser.id,
         ownerNickName: this.loggedInUser.nickName,
+        topicId: this.topicId,
         quotedPost: this.quotedPost
       })
       .then(() => {     
@@ -43,6 +44,7 @@ export default {
             ownerId: this.loggedInUser.id,
             date: moment(),
             post: this.newPost,
+            topicId: this.topicId,
             quotedPost: this.quotedPost
           }
         })
