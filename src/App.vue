@@ -3,8 +3,12 @@
     <v-app-bar app color="primary" dark prominent>
       <v-toolbar-title><router-link :to="{ name: 'home'}"><span class="white--text">Forum.hr</span></router-link><span v-if="isTopicPage()">/{{currentTopic.title}}</span></v-toolbar-title>
         <v-spacer></v-spacer>
+
+        <!-- <v-divider vertical class="mx-4 pa-10"></v-divider> -->
+        <div class="n-div mx-4"></div>
         <template v-if="loggedInUser.id ===''">
-          <div class="pt-1">
+          <Login :appbar="true" @loggingIn="onLoggingIn"></Login>
+          <!-- <div class="pt-1">
             <div class="d-flex">
               <p class="mr-4">Username</p>
               <v-text-field v-model="loginData.nickName" type="text"></v-text-field>
@@ -14,23 +18,34 @@
               <v-text-field v-model="loginData.password" type="password"></v-text-field>
             </div>
           </div>
-          <v-btn @click="login(loginData)">Login</v-btn>
+          <v-btn @click="login(loginData)">Login</v-btn> -->
         </template>
         <template v-else>
-          Welcome, {{loggedInUser.nickName}}
-          <v-btn @click="logout">Logout</v-btn>
+          <div class="d-flex flex-column mt-4">
+            <div>
+              Welcome, {{loggedInUser.nickName}}
+            </div>
+          <div class="d-flex justify-end">
+            <v-btn plain class="pa-0 mr-4" :to="{ name: 'profile', params: { ownerId: loggedInUser.id}}">Edit profile</v-btn>
+            <v-btn @click="logout" plain class="pa-0">Logout</v-btn>
+          </div>
+         </div>
         </template>
     </v-app-bar>
     
     <v-main>
-      <router-view :loggedInUser="loggedInUser" :topics="topics" @topicChanged="onTopicChanged" @loggingIn="onloggingIn"></router-view>
+      <router-view :loggedInUser="loggedInUser" :topics="topics" @topicChanged="onTopicChanged" @loggingIn="onLoggingIn" @userUpdated="onUserUpdated"></router-view>
     </v-main> 
   </v-app>
 </template>
 
 <script>
 import axios from 'axios'
+import Login from './components/Login.vue'
 export default {
+  components: {
+    Login
+  },
   data: () => {
     return {
       loginData: {
@@ -39,7 +54,8 @@ export default {
       },
       loggedInUser: {
         id: '',
-        nickName: ''
+        nickName: '',
+        avatar: ''
       },
       currentTopic:{
         id: '',
@@ -50,38 +66,44 @@ export default {
     }
   },
   methods:{
-    login(data){
-      axios.get('/backend/login', {
-        params: data
-      })
-      .then(response => {
-        sessionStorage.setItem('id', response.data._id);
-        this.loggedInUser.id = response.data._id
-        this.loggedInUser.nickName = response.data.nickName
-        data.nickName = '',
-        data.password = ''
-      })
-      .catch(error => {
-        console.log(error)
-      })
-    },
+    // login(data){
+    //   axios.get('/backend/login', {
+    //     params: data
+    //   })
+    //   .then(response => {
+    //     sessionStorage.setItem('id', response.data._id);
+    //     this.loggedInUser.id = response.data._id
+    //     this.loggedInUser.nickName = response.data.nickName
+    //     data.nickName = '',
+    //     data.password = ''
+    //   })
+    //   .catch(error => {
+    //     console.log(error)
+    //   })
+    // },
     logout(){
       sessionStorage.clear();
       this.loggedInUser.id = '',
       this.loggedInUser.nickName = ''
+      this.loggedInUser.avatar = ''
     },
     getLoggedInUserData(){
+      console.log('trying to get user')
       var id = sessionStorage.getItem('id')
-      axios.get('backend/user', {
+      console.log('id is ', id)
+      axios.get('/backend/user', {
         params: {
           id: id
         }
       })
       .then(response =>{
+        console.log('got user')
         this.loggedInUser.id = response.data._id
         this.loggedInUser.nickName = response.data.nickName
+        this.loggedInUser.avatar = response.data.avatar
       })
       .catch(error => {
+        console.log('did not get user')
         console.log(error)
       })
     },
@@ -114,13 +136,31 @@ export default {
         console.log(error)
       })
     },
-    onloggingIn(value){
-      this.login(value)
+    onLoggingIn(value){
+      sessionStorage.setItem('id', value.data._id);
+      this.loggedInUser.id = value.data._id
+      this.loggedInUser.nickName = value.data.nickName
+      this.loggedInUser.avatar = value.data.avatar
+    },
+    onUserUpdated(value){
+      console.log('event trigered')
+      this.loggedInUser.nickName = value.data.nickName
+      this.loggedInUser.avatar = value.data.avatar
+      console.log('avatar is ', this.loggedInUser.avatar)
     }
   },
   created () {
+    console.log('creating app once again')
     this.getLoggedInUserData()
     this.getAllTopics()
   }
 };
 </script>
+
+<style scoped>
+  .n-div {
+    width: 1px;
+    height: 100%;
+    background-color: white;
+  }
+</style>

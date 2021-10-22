@@ -1,9 +1,10 @@
 <template>
-  <v-container class="mt-12">    
+  <v-container class="mt-12">   
+    {{loggedInUser}} 
     <v-btn class="mb-4 primary" x-large @click="addPost()">New Post</v-btn>
     <v-dialog :value="showDialogLogIn" @click:outside="closeLogInDialog()" max-width="800">
       <v-card>
-        <Login @loggingIn="onLoggingIn" :showDialogLogIn="showDialogLogIn"></Login>
+        <Login @loggingIn="onLoggingIn" :showDialogLogIn="showDialogLogIn" :topic="true"></Login>
       </v-card>
     </v-dialog>
     <AddPost :loggedInUser="loggedInUser" :showDialogPost="showDialogPost" :quotedPost="quotedPost" :topicId="topicId" @closeDialog="onCloseDialog"></AddPost>
@@ -11,7 +12,10 @@
       <v-col class="pa-0">
         <div class="n-color white--text text-h6 pl-3">{{formatDate(post.date)}}</div>
         <v-row class="ma-0">
-          <v-col cols="3" class="n-border-right text-h6 pb-16">{{post.ownerNickName}}</v-col>
+          <v-col cols="3" class="n-border-right pb-16">
+            <div class='text-h6'>{{post.ownerNickName}}</div>
+            <v-img :src="'/backend/user/images/' + post.ownerAvatar" max-height="180" max-width="180"></v-img>
+          </v-col>
           <v-col cols="9" class="text-h6 font-weight-light d-flex flex-wrap">       
             <template v-if="post.quotedPost">
               <v-card color="secondary" class="mx-auto n-fullRow">
@@ -81,10 +85,10 @@ export default {
     },
     formatDate(date){
       return moment(date).calendar(null, {
-        sameDay: '[Today at ]H[:]m',
-        lastDay: '[Yesterday at ]H[:]m',
-        lastWeek: 'MMMM Do YYYY[, ]H[:]m',
-        sameElse: 'MMMM Do YYYY[, ]H[:]m'
+        sameDay: '[Today at ]H[:]mm',
+        lastDay: '[Yesterday at ]H[:]mm',
+        lastWeek: 'MMMM Do YYYY[, ]H[:]mm',
+        sameElse: 'MMMM Do YYYY[, ]H[:]mm'
       });
     },
     onCloseDialog(value){

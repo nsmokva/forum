@@ -34,6 +34,7 @@ export default {
         date: now,
         ownerId: this.loggedInUser.id,
         ownerNickName: this.loggedInUser.nickName,
+        ownerAvatar: this.loggedInUser.avatar,
         topicId: this.topicId,
         quotedPost: this.quotedPost
       })
@@ -42,6 +43,7 @@ export default {
           post:{
             ownerNickName: this.loggedInUser.nickName,
             ownerId: this.loggedInUser.id,
+            ownerAvatar: this.loggedInUser.avatar,
             date: moment(),
             post: this.newPost,
             topicId: this.topicId,

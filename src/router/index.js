@@ -2,6 +2,8 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import Topic from '../views/Topic.vue'
+import Profile from '../views/Profile.vue'
+
 
 Vue.use(VueRouter)
 
@@ -15,6 +17,12 @@ const routes = [
     path: '/:topicId',
     name: 'topic',
     component: Topic,
+    props: true
+  },
+  {
+    path: '/profile/:ownerId',
+    name: 'profile',
+    component: Profile,
     props: true
   }
 ]
