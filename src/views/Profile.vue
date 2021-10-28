@@ -1,12 +1,11 @@
 <template>
   <div>  
-    <v-img v-if="loggedInUser.avatar" max-height="150" max-width="250" :src="'/backend/user/images/' + loggedInUser.avatar" class="mx-auto mt-8"></v-img>
+    <v-img v-if="loggedInUser.avatar" height="200" width="200" :src="'/backend/user/images/' + loggedInUser.avatar" class="mx-auto mt-8"></v-img>
     <p class="font-weight-bold text-h4 text-center pt-6">{{loggedInUser.nickName}}</p> 
     <p class="text-center blue--text text-decoration-underline">Change your avatar</p>
     <div class="n-div mx-auto">
       <v-file-input @change="photoChanged"></v-file-input>
     </div>
-    {{loggedInUser}}
   </div> 
 </template>
 
