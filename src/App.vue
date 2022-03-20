@@ -34,7 +34,7 @@
     </v-app-bar>
     
     <v-main>
-      <router-view :loggedInUser="loggedInUser" :topics="topics" @topicChanged="onTopicChanged" @loggingIn="onLoggingIn" @userUpdated="onUserUpdated"></router-view>
+      <router-view :loggedInUser="loggedInUser" :topics="topics" @topicChanged="onTopicChanged" @loggingIn="onLoggingIn" @userUpdated="onUserUpdated" @increaseTotalPosts="onIncreaseTotalPosts"></router-view>
     </v-main> 
   </v-app>
 </template>
@@ -88,22 +88,18 @@ export default {
       this.loggedInUser.avatar = ''
     },
     getLoggedInUserData(){
-      console.log('trying to get user')
       var id = sessionStorage.getItem('id')
-      console.log('id is ', id)
       axios.get('/backend/user', {
         params: {
           id: id
         }
       })
       .then(response =>{
-        console.log('got user')
         this.loggedInUser.id = response.data._id
         this.loggedInUser.nickName = response.data.nickName
         this.loggedInUser.avatar = response.data.avatar
       })
       .catch(error => {
-        console.log('did not get user')
         console.log(error)
       })
     },
@@ -143,14 +139,15 @@ export default {
       this.loggedInUser.avatar = value.data.avatar
     },
     onUserUpdated(value){
-      console.log('event trigered')
       this.loggedInUser.nickName = value.data.nickName
       this.loggedInUser.avatar = value.data.avatar
-      console.log('avatar is ', this.loggedInUser.avatar)
+    },
+    onIncreaseTotalPosts(value){
+      const found = this.topics.find(element => element._id == value);
+      found.totalPosts = found.totalPosts + 1
     }
   },
   created () {
-    console.log('creating app once again')
     this.getLoggedInUserData()
     this.getAllTopics()
   }

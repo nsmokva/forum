@@ -1,10 +1,9 @@
 <template>
   <v-container class="mt-12">   
-    {{loggedInUser}} 
     <v-btn class="mb-4 primary" x-large @click="addPost()">New Post</v-btn>
     <v-dialog :value="showDialogLogIn" @click:outside="closeLogInDialog()" max-width="800">
       <v-card>
-        <Login @loggingIn="onLoggingIn" :showDialogLogIn="showDialogLogIn" :topic="true"></Login>
+        <Login @loggingIn="onLoggingIn" :showDialogLogIn="showDialogLogIn"></Login>
       </v-card>
     </v-dialog>
     <AddPost :loggedInUser="loggedInUser" :showDialogPost="showDialogPost" :quotedPost="quotedPost" :topicId="topicId" @closeDialog="onCloseDialog"></AddPost>
@@ -35,6 +34,13 @@
         </v-row>
       </v-col>
     </v-row>
+    <v-row  class="d-flex justify-end">
+      <v-col cols="auto">
+        <v-container class="max-width">
+          <v-pagination v-model="page" :length="length" @input="pagInput"></v-pagination>
+        </v-container>
+      </v-col>
+  </v-row>
   </v-container>
 </template>
 
@@ -48,13 +54,24 @@ export default {
     AddPost,
     Login
   },
-  props:['loggedInUser', 'topicId'],
+  props:['loggedInUser', 'topicId', 'topics'],
   data: () => {
     return {
       posts: [],
       showDialogPost: false,
       showDialogLogIn: false,
-      quotedPost: ''
+      quotedPost: '',
+      page: 1
+    }
+  },
+  computed: {   
+    length: function(){
+      if(this.topics.length!=0){
+        var currentTopic = this.topics.find(element => element._id == this.topicId);
+        return Math.ceil(currentTopic.totalPosts/3)
+      }else{
+        return 0
+      }
     }
   },
   methods: {
@@ -68,21 +85,21 @@ export default {
         }
       }    
     },
-    getAllPostsinTopic(){
-      console.log('topicId ', this.topicId)
-      axios.get('/backend/topic', {
-        params:{
-          id: this.topicId
-        }
-      })
-      .then(response => {
-        console.log('all posts in getAllPosts: ', response)
-        this.posts = response.data
-      })
-      .catch(error => {
-        console.log(error)
-      })
-    },
+    // getAllPostsinTopic(){
+    //   console.log('topicId ', this.topicId)
+    //   axios.get('/backend/topic', {
+    //     params:{
+    //       id: this.topicId
+    //     }
+    //   })
+    //   .then(response => {
+    //     console.log('all posts in getAllPosts: ', response)
+    //     this.posts = response.data
+    //   })
+    //   .catch(error => {
+    //     console.log(error)
+    //   })
+    // },
     formatDate(date){
       return moment(date).calendar(null, {
         sameDay: '[Today at ]H[:]mm',
@@ -95,6 +112,7 @@ export default {
       this.showDialogPost = false
       if(value != undefined){
         this.posts.push(value.post)
+        this.$emit('increaseTotalPosts', value.post.topicId)
       }
       this.quotedPost = ''
     },
@@ -110,6 +128,31 @@ export default {
     },
     onLoggingIn(value){
       this.$emit('loggingIn', value)
+    },
+    pagInput(value){
+      console.log ('pagInput is ', value)
+      sessionStorage.setItem('page', value);
+      //instruct axios to give you items for a specific page
+       axios.get('/backend/topic/page', {
+        params:{
+          id: this.topicId,
+          page: value,
+          limit: 3
+        }
+      })
+      .then(response => {
+        console.log('posts in page: ', response)
+        this.posts = response.data
+       
+      })
+      .catch(error => {
+        console.log(error)
+      })
+
+
+    },
+    pagNext(value){
+      console.log('pagNext is ', value)
     }
   },
   watch: {
@@ -130,7 +173,10 @@ export default {
     }
   },
   created(){
-    this.getAllPostsinTopic()
+    // this.getAllPostsinTopic()
+   var page = sessionStorage.getItem('page')
+   this.pagInput(page)
+   
     this.quotedPost = ''
   }
 }
