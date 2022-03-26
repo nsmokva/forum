@@ -35,9 +35,12 @@
       </v-col>
     </v-row>
     <v-row  class="d-flex justify-end">
+  page is {{page}}
+  topic id is {{topicId}}
+  topic changed {{topicChanged}}
       <v-col cols="auto">
         <v-container class="max-width">
-          <v-pagination v-model="page" :length="length" @input="pagInput"></v-pagination>
+          <v-pagination :value="page" :length="length" @input="pagInput"></v-pagination>
         </v-container>
       </v-col>
   </v-row>
@@ -54,21 +57,21 @@ export default {
     AddPost,
     Login
   },
-  props:['loggedInUser', 'topicId', 'topics'],
+  props:['loggedInUser', 'topicId', 'topics', 'currentTopic'],
   data: () => {
     return {
       posts: [],
       showDialogPost: false,
       showDialogLogIn: false,
       quotedPost: '',
-      page: 1
+      page: 1,
+      topicChanged: false
     }
   },
   computed: {   
     length: function(){
       if(this.topics.length!=0){
-        var currentTopic = this.topics.find(element => element._id == this.topicId);
-        return Math.ceil(currentTopic.totalPosts/3)
+        return Math.ceil(this.currentTopic.totalPosts/3)
       }else{
         return 0
       }
@@ -130,6 +133,7 @@ export default {
       this.$emit('loggingIn', value)
     },
     pagInput(value){
+      this.page = parseInt(value)
       console.log ('pagInput is ', value)
       sessionStorage.setItem('page', value);
       //instruct axios to give you items for a specific page
@@ -160,6 +164,8 @@ export default {
       immediate: true,
       handler (newTopic) {
       this.$emit('topicChanged', newTopic)
+      //this.page = 1
+      this.topicChanged = true
       },
     },
     loggedInUser:{
@@ -170,14 +176,40 @@ export default {
           this.closeLogInDialog()
         }
       }
-    }
+    },
+    $route (to, from){
+     console.log('watching route "to" is ', to)
+     console.log('watching route "from" is ', from)
+  }
   },
   created(){
+    if(this.topicId){
+      var currentTopicId = sessionStorage.getItem('topicId')
+      if(currentTopicId == this.topicId){
+        this.page = sessionStorage.getItem('page')
+      }
+       sessionStorage.setItem('topicId', this.topicId);
+    }
+    else{
+      console.log('no topic id')
+    }
     // this.getAllPostsinTopic()
-   var page = sessionStorage.getItem('page')
-   this.pagInput(page)
+   // console.log('new creation')
+    //if topic does not change - taje page from session
+    //if topic changes page is 1
+    // if(this.topicChanged){
+    //   this.pagInput(1)
+       
+    // }else{
+    //   this.page = sessionStorage.getItem('page')
+     this.pagInput(this.page)
+    // }
+ 
    
-    this.quotedPost = ''
+    // var page = sessionStorage.getItem('page')
+    // this.pagInput(page)
+   
+    // this.quotedPost = ''
   }
 }
 </script>

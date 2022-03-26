@@ -34,7 +34,8 @@
     </v-app-bar>
     
     <v-main>
-      <router-view :loggedInUser="loggedInUser" :topics="topics" @topicChanged="onTopicChanged" @loggingIn="onLoggingIn" @userUpdated="onUserUpdated" @increaseTotalPosts="onIncreaseTotalPosts"></router-view>
+       current topic is  {{currentTopic}}
+      <router-view :loggedInUser="loggedInUser" :topics="topics" :currentTopic="currentTopic" @topicChanged="onTopicChanged" @loggingIn="onLoggingIn" @userUpdated="onUserUpdated" @increaseTotalPosts="onIncreaseTotalPosts"></router-view>
     </v-main> 
   </v-app>
 </template>
@@ -59,7 +60,8 @@ export default {
       },
       currentTopic:{
         id: '',
-        title:''
+        title:'',
+        totalPosts: 0
       },
       topics: [],
       gotTopics: false
@@ -107,7 +109,7 @@ export default {
       this.currentTopic.id = value
       if(this.gotTopics == true){
         const found = this.topics.find(element => element._id == this.currentTopic.id);
-        this.currentTopic.title = found.title
+        this.currentTopic = found
       }
       
     },
@@ -124,7 +126,7 @@ export default {
         this.topics = response.data
         if(this.currentTopic.id != ''){
           const found = this.topics.find(element => element._id == this.currentTopic.id);
-          this.currentTopic.title = found.title
+          this.currentTopic = found
         }
         this.gotTopics = true
       })
@@ -143,8 +145,10 @@ export default {
       this.loggedInUser.avatar = value.data.avatar
     },
     onIncreaseTotalPosts(value){
+
       const found = this.topics.find(element => element._id == value);
       found.totalPosts = found.totalPosts + 1
+      this.currentTopic.totalPosts = this.currentTopic.totalPosts + 1
     }
   },
   created () {
