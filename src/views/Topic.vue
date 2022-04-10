@@ -1,5 +1,5 @@
 <template>
-  <v-container class="mt-12">   
+  <v-container class="mt-12">  
     <v-btn class="mb-4 primary" x-large @click="addPost()">New Post</v-btn>
     <v-dialog :value="showDialogLogIn" @click:outside="closeLogInDialog()" max-width="800">
       <v-card>
@@ -35,11 +35,8 @@
       </v-col>
     </v-row>
     <v-row  class="d-flex justify-end">
-  page is {{page}}
-  topic id is {{topicId}}
-  topic changed {{topicChanged}}
-      <v-col cols="auto">
-        <v-container class="max-width">
+      <v-col cols="3">
+        <v-container >
           <v-pagination :value="page" :length="length" @input="pagInput"></v-pagination>
         </v-container>
       </v-col>
@@ -80,6 +77,9 @@ export default {
   methods: {
     addPost(post){
        if(this.loggedInUser.id == ''){
+        if(post != undefined){
+          this.quotedPost = post
+        }
         this.showDialogLogIn = true
       }else{
         this.showDialogPost = true
@@ -88,21 +88,6 @@ export default {
         }
       }    
     },
-    // getAllPostsinTopic(){
-    //   console.log('topicId ', this.topicId)
-    //   axios.get('/backend/topic', {
-    //     params:{
-    //       id: this.topicId
-    //     }
-    //   })
-    //   .then(response => {
-    //     console.log('all posts in getAllPosts: ', response)
-    //     this.posts = response.data
-    //   })
-    //   .catch(error => {
-    //     console.log(error)
-    //   })
-    // },
     formatDate(date){
       return moment(date).calendar(null, {
         sameDay: '[Today at ]H[:]mm',
@@ -115,12 +100,21 @@ export default {
       this.showDialogPost = false
       if(value != undefined){
         this.posts.push(value.post)
+        console.log('posts areeee ', this.posts)
+        console.log('route is ', this.$route)
+        if(this.posts.length === 4){
+         //here need to push change to route -- incerease this.$route.query by 1
+        var path = this.$route.path
+        var query = parseInt(this.$route.query.page) + 1
+        this.$router.push({ path: path, query: { page: query } })
+        }
         this.$emit('increaseTotalPosts', value.post.topicId)
       }
       this.quotedPost = ''
     },
     closeLogInDialog(){
       this.showDialogLogIn = false
+      this.quotedPost = ''
     },
     showEdit(post){
       if(post.ownerId == this.loggedInUser.id){
@@ -130,12 +124,18 @@ export default {
       }
     },
     onLoggingIn(value){
+      this.showDialogPost = true
       this.$emit('loggingIn', value)
     },
-    pagInput(value){
+    pagInput(value, shouldReplace){
       this.page = parseInt(value)
       console.log ('pagInput is ', value)
-      sessionStorage.setItem('page', value);
+      if (shouldReplace == true){
+        this.$router.replace({name: 'topic', query: {page: value}})
+      }else{
+        this.$router.push({name: 'topic', query: {page: value}})
+      }    
+      //sessionStorage.setItem('page', value);
       //instruct axios to give you items for a specific page
        axios.get('/backend/topic/page', {
         params:{
@@ -178,38 +178,20 @@ export default {
       }
     },
     $route (to, from){
-     console.log('watching route "to" is ', to)
-     console.log('watching route "from" is ', from)
+      if(to.query.page != this.page){
+        this.pagInput(to.query.page)
+      }
+      console.log('watching route "to" is ', to)
+      console.log('watching route "from" is ', from)
   }
   },
   created(){
-    if(this.topicId){
-      var currentTopicId = sessionStorage.getItem('topicId')
-      if(currentTopicId == this.topicId){
-        this.page = sessionStorage.getItem('page')
-      }
-       sessionStorage.setItem('topicId', this.topicId);
-    }
-    else{
-      console.log('no topic id')
-    }
-    // this.getAllPostsinTopic()
-   // console.log('new creation')
-    //if topic does not change - taje page from session
-    //if topic changes page is 1
-    // if(this.topicChanged){
-    //   this.pagInput(1)
-       
-    // }else{
-    //   this.page = sessionStorage.getItem('page')
-     this.pagInput(this.page)
-    // }
- 
-   
-    // var page = sessionStorage.getItem('page')
-    // this.pagInput(page)
-   
-    // this.quotedPost = ''
+     if(this.$route.query.page){
+      this.pagInput(this.$route.query.page, false)
+     }else{
+      this.pagInput(1, true)
+     }
+     console.log('created topic')
   }
 }
 </script>

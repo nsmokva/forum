@@ -1,8 +1,13 @@
 <template>
   <v-app>
     <v-app-bar app color="primary" dark prominent>
-      <v-toolbar-title><router-link :to="{ name: 'home'}"><span class="white--text">Forum.hr</span></router-link><span v-if="isTopicPage()">/{{currentTopic.title}}</span></v-toolbar-title>
+      <v-toolbar-title>
+        <router-link :to="{ name: 'home'}"><span class="white--text text-h3">Forum.hr</span></router-link>
         <v-spacer></v-spacer>
+        <v-icon v-if="isTopicPage()" large class='pl-6'>mdi-subdirectory-arrow-right</v-icon>
+        <span v-if="isTopicPage()">{{currentTopic.title}}</span>
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
 
         <!-- <v-divider vertical class="mx-4 pa-10"></v-divider> -->
         <div class="n-div mx-4"></div>
@@ -34,8 +39,7 @@
     </v-app-bar>
     
     <v-main>
-       current topic is  {{currentTopic}}
-      <router-view :loggedInUser="loggedInUser" :topics="topics" :currentTopic="currentTopic" @topicChanged="onTopicChanged" @loggingIn="onLoggingIn" @userUpdated="onUserUpdated" @increaseTotalPosts="onIncreaseTotalPosts"></router-view>
+      <router-view :loggedInUser="loggedInUser" :topics="topics" :currentTopic="currentTopic" @topicChanged="onTopicChanged" @loggingIn="onLoggingIn" @userUpdated="onUserUpdated" @increaseTotalPosts="onIncreaseTotalPosts" @closeDialog="onCloseDialog"></router-view>
     </v-main> 
   </v-app>
 </template>
@@ -124,6 +128,7 @@ export default {
       axios.get('/backend/topics')
       .then(response =>{
         this.topics = response.data
+            console.log('topics are', this.topics)
         if(this.currentTopic.id != ''){
           const found = this.topics.find(element => element._id == this.currentTopic.id);
           this.currentTopic = found
@@ -144,11 +149,13 @@ export default {
       this.loggedInUser.nickName = value.data.nickName
       this.loggedInUser.avatar = value.data.avatar
     },
-    onIncreaseTotalPosts(value){
-
-      const found = this.topics.find(element => element._id == value);
-      found.totalPosts = found.totalPosts + 1
+    onIncreaseTotalPosts(){
       this.currentTopic.totalPosts = this.currentTopic.totalPosts + 1
+    },
+    onCloseDialog(value){
+      if(value != undefined){
+        this.topics.push(value)
+      }
     }
   },
   created () {

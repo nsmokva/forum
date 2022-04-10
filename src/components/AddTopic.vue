@@ -4,7 +4,7 @@
       <v-card>
         <v-text-field v-model="newTopic" label="Topic title"></v-text-field>
         <v-textarea v-model="newPost" label="First post in topic"></v-textarea>
-        <v-btn @click="publish">Publish</v-btn>
+        <v-btn :class="btnClass" @click="publish">Publish</v-btn>
       </v-card>
     </v-dialog>
   </div>
@@ -21,13 +21,23 @@ export default {
       newPost: ''
     }
   },
+  computed: {
+    btnClass(){
+      if(this.newTopic!= '' && this.newPost != ''){
+        return 'mb-4 primary'
+      }else{
+        return 'mb-4 secondary'
+      }
+    }
+  },
   methods: {
     publish(){
-      axios.post('/backend/topics', {
-        title: this.newTopic
-      })
+      if(this.newTopic!= '' && this.newPost != ''){
+        axios.post('/backend/topics', {
+          title: this.newTopic
+        })
       .then((result)=>{
-        console.log('new topic added, result is ', result.data._id)
+        console.log('new topic added, result is ', result)
         var now = moment ();
         axios.post('/backend/posts', {
           post: this.newPost,
@@ -37,46 +47,32 @@ export default {
           ownerAvatar: this.loggedInUser.avatar,
           topicId: result.data._id
         })  
-        .then(()=>{
-          console.log('first post added')
+        .then((r)=>{
+          this.closeDialog(result)
+          console.log('first post added, result is', result)
+          console.log('first post added, r is', r)
         })
-         
-        
+        .catch((error)=>{
+        console.log('publishing error 1', error)
+        })
       })
-
-
-      
-
-      // axios.post('/backend/posts', {
-      //   post: this.newPost,
-      //   date: now,
-      //   ownerId: this.loggedInUser.id,
-      //   ownerNickName: this.loggedInUser.nickName,
-      //   ownerAvatar: this.loggedInUser.avatar,
-      //   topicId: this.topicId,
-      //   quotedPost: this.quotedPost
-      // })
-      // .then(() => {     
-      //   this.$emit('closeDialog', {
-      //     post:{
-      //       ownerNickName: this.loggedInUser.nickName,
-      //       ownerId: this.loggedInUser.id,
-      //       ownerAvatar: this.loggedInUser.avatar,
-      //       date: moment(),
-      //       post: this.newPost,
-      //       topicId: this.topicId,
-      //       quotedPost: this.quotedPost
-      //     }
-      //   })
-      //   this.newPost = ''
-      // })
-      // .catch( error => {
-      //   console.log(error);
-      // });
+      .catch((error)=>{
+        console.log('publishing error 2', error)
+      })
+      }
     },
-    closeDialog(){
-      this.$emit('closeDialog')
+    closeDialog(value){
+      if(value != undefined){
+        this.$emit('closeDialog', {
+          _id: value.data._id,
+          title: this.newTopic,
+          totalPosts: 1
+        })
+      }else{
+        this.$emit('closeDialog')
+      } 
       this.newPost = ''
+      this.newTopic = ''
     }
   }
 }

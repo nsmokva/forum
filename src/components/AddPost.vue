@@ -57,6 +57,7 @@ export default {
       });
     },
     closeDialog(){
+      console.log('triggered')
       this.$emit('closeDialog')
       this.newPost = ''
     }

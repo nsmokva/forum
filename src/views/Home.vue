@@ -60,6 +60,7 @@ export default {
   props:['topics', 'loggedInUser'],
   methods:{
     onLoggingIn(value){
+      this.showDialogTopic = true
       this.$emit('loggingIn', value)
     },
     closeLogInDialog(){
@@ -73,8 +74,9 @@ export default {
         this.showDialogTopic= true
       }    
     },
-    onCloseDialog(){                                     //---------------------------------- 15 3 22 needs to be adjusted to topic!
+    onCloseDialog(value){                                     //---------------------------------- 15 3 22 needs to be adjusted to topic!
       this.showDialogTopic = false
+      this.$emit('closeDialog', value)
       // if(value != undefined){
       //   this.posts.push(value.post)
       //   this.$emit('increaseTotalPosts', value.post.topicId)
